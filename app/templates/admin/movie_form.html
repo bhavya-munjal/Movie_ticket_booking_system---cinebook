@@ -1,0 +1,53 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<div class="page-header">
+  <h1>{{ 'Edit Movie' if movie else 'Add New Movie' }}</h1>
+</div>
+
+<div class="card" style="padding:1.5rem;max-width:600px">
+  <form method="post" action="{{ '/admin/movies/edit/' + movie.id|string if movie else '/admin/movies/add' }}">
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Title *</label>
+        <input type="text" name="title" required value="{{ movie.title if movie else '' }}">
+      </div>
+      <div class="form-group">
+        <label>Genre</label>
+        <input type="text" name="genre" value="{{ movie.genre if movie else '' }}" placeholder="Action, Drama...">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea name="description">{{ movie.description if movie else '' }}</textarea>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Language</label>
+        <select name="language">
+          {% for lang in ['English','Hindi','Tamil','Telugu','Korean','Spanish','French'] %}
+          <option value="{{ lang }}" {{ 'selected' if movie and movie.language == lang else '' }}>{{ lang }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Duration (minutes)</label>
+        <input type="number" name="duration_mins" value="{{ movie.duration_mins if movie else 120 }}" min="1">
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Rating (0–10)</label>
+        <input type="number" name="rating" step="0.1" min="0" max="10" value="{{ movie.rating if movie else 0.0 }}">
+      </div>
+      <div class="form-group">
+        <label>Poster URL</label>
+        <input type="url" name="poster_url" value="{{ movie.poster_url if movie else '' }}" placeholder="https://...">
+      </div>
+    </div>
+    <div class="flex gap-2">
+      <button type="submit" class="btn btn-primary">{{ 'Save Changes' if movie else 'Add Movie' }}</button>
+      <a href="/admin/movies" class="btn btn-outline">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

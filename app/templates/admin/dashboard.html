@@ -1,0 +1,47 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<div class="page-header">
+  <h1>Dashboard</h1>
+  <p class="text-muted">Overview of CineBook operations</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--accent)">{{ movies|length }}</div>
+    <div class="stat-label">Active Movies</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--gold)">{{ showtimes|length }}</div>
+    <div class="stat-label">Showtimes</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:var(--success)">{{ bookings|length }}</div>
+    <div class="stat-label">Total Bookings</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value" style="color:#60a5fa">₹{{ "%.0f"|format(total_revenue) }}</div>
+    <div class="stat-label">Revenue Collected</div>
+  </div>
+</div>
+
+<div class="section-title">Recent Bookings</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Ref</th><th>User</th><th>Movie</th><th>Seats</th><th>Amount</th><th>Status</th></tr></thead>
+    <tbody>
+      {% for b in bookings %}
+      <tr>
+        <td><code style="color:var(--gold)">{{ b.booking_ref }}</code></td>
+        <td>{{ b.user.name }}</td>
+        <td>{{ b.showtime.movie.title }}</td>
+        <td>{{ b.seat_labels }}</td>
+        <td>₹{{ "%.0f"|format(b.total_amount) }}</td>
+        <td><span class="badge badge-{{ b.status }}">{{ b.status|title }}</span></td>
+      </tr>
+      {% else %}
+      <tr><td colspan="6" style="text-align:center;color:var(--text2)">No bookings yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

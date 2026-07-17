@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}CineBook — Book Movie Tickets{% endblock %}
+{% block content %}
+<div class="hero">
+  <h1>Book Your <span>Cinema</span> Experience</h1>
+  <p>Now Showing — Pick a movie, choose your seats, enjoy the show.</p>
+</div>
+
+<div class="section">
+  <div class="section-title">Now Showing</div>
+  {% if movies %}
+  <div class="movie-grid">
+    {% for movie in movies %}
+    <a href="/movies/{{ movie.id }}" style="text-decoration:none;">
+      <div class="movie-card">
+        {% if movie.poster_url %}
+          <img src="{{ movie.poster_url }}" alt="{{ movie.title }}" loading="lazy">
+        {% else %}
+          <div style="aspect-ratio:2/3;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:2rem;">🎬</div>
+        {% endif %}
+        <div class="movie-card-body">
+          <div class="movie-card-title">{{ movie.title }}</div>
+          <div class="movie-card-meta flex gap-2 items-center mt-1">
+            <span class="rating">★ {{ movie.rating }}</span>
+            <span>·</span>
+            <span>{{ movie.duration_mins }}m</span>
+          </div>
+          <div class="movie-card-meta mt-1">
+            <span class="badge badge-genre">{{ movie.genre }}</span>
+          </div>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">🎬</div>
+    <p>No movies available right now.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

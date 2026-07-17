@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+{% block title %}Select Seats — {{ showtime.movie.title }}{% endblock %}
+{% block content %}
+<div class="section" style="max-width:900px">
+  <div class="page-header">
+    <h1>{{ showtime.movie.title }}</h1>
+    <p class="text-muted">{{ showtime.show_date }} · {{ showtime.show_time }} · {{ showtime.screen.name }}</p>
+  </div>
+
+  <div id="lock-timer">⏱ Seats held for <span id="timer-countdown"></span></div>
+
+  <div class="seat-legend">
+    <div class="legend-item"><div class="legend-dot" style="background:var(--bg3);border:1px solid var(--border)"></div>Available</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div>Selected</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#2a1a1a"></div>Booked</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#1a2a1a"></div>Locked by others</div>
+  </div>
+
+  <div class="screen-bar">SCREEN — ALL EYES THIS WAY</div>
+
+  <div class="seat-rows">
+    {% for row, seats in rows.items() %}
+    <div class="seat-row">
+      <span class="row-label">{{ row }}</span>
+      {% for seat in seats %}
+      {% if seat.seat_number == (seats|length // 2) + 1 %}<div class="seat-gap"></div>{% endif %}
+      <button class="seat
+          {% if seat.is_booked %}booked
+          {% elif seat.is_locked and seat.locked_by != user.id %}locked
+          {% else %}available{% endif %}"
+        data-id="{{ seat.id }}"
+        data-label="{{ seat.row_label }}{{ seat.seat_number }}"
+        {% if seat.is_booked or (seat.is_locked and seat.locked_by != user.id) %}disabled{% endif %}
+        onclick="toggleSeat(this)">
+        {{ seat.seat_number }}
+      </button>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="booking-summary mt-3">
+    <div class="summary-row"><span>Selected Seats</span><span id="sel-labels">None</span></div>
+    <div class="summary-row"><span>Price per seat</span><span>₹{{ "%.0f"|format(showtime.price) }}</span></div>
+    <div class="summary-row total"><span>Total</span><span id="sel-total">₹0</span></div>
+    <div class="mt-2">
+      <button class="btn btn-primary btn-block" id="proceed-btn" onclick="proceedToCheckout()" disabled>
+        Proceed to Pay
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const PRICE = {{ showtime.price }};
+const SHOWTIME_ID = {{ showtime.id }};
+const LOCK_MINS = {{ lock_minutes }};
+let selected = new Set();
+let lockTimer = null;
+let lockEnd = null;
+
+function toggleSeat(el) {
+  const id = parseInt(el.dataset.id);
+  if (selected.has(id)) {
+    selected.delete(id);
+    el.classList.remove('selected');
+    el.classList.add('available');
+  } else {
+    selected.add(id);
+    el.classList.remove('available');
+    el.classList.add('selected');
+  }
+  updateSummary();
+}
+
+function updateSummary() {
+  const labels = [...document.querySelectorAll('.seat.selected')].map(s => s.dataset.label).join(', ');
+  document.getElementById('sel-labels').textContent = labels || 'None';
+  document.getElementById('sel-total').textContent = '₹' + (selected.size * PRICE).toFixed(0);
+  document.getElementById('proceed-btn').disabled = selected.size === 0;
+}
+
+async function proceedToCheckout() {
+  if (selected.size === 0) return;
+  const btn = document.getElementById('proceed-btn');
+  btn.disabled = true; btn.textContent = 'Locking seats...';
+  const res = await apiPost('/bookings/lock-seats', { seat_ids: [...selected] });
+  if (res.success) {
+    lockEnd = new Date(res.locked_until + 'Z');
+    startTimer();
+    const ids = [...selected].join(',');
+    window.location.href = `/bookings/checkout/${SHOWTIME_ID}?seats=${ids}`;
+  } else {
+    showToast(res.message || 'Could not lock seats. Please try again.', 'error');
+    btn.disabled = false; btn.textContent = 'Proceed to Pay';
+  }
+}
+
+function startTimer() {
+  const el = document.getElementById('lock-timer');
+  const cd = document.getElementById('timer-countdown');
+  el.style.display = 'block';
+  lockTimer = setInterval(() => {
+    const left = Math.max(0, Math.round((lockEnd - Date.now()) / 1000));
+    const m = Math.floor(left / 60), s = left % 60;
+    cd.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (left === 0) { clearInterval(lockTimer); showToast('Seat lock expired!', 'error'); }
+  }, 1000);
+}
+
+window.addEventListener('beforeunload', () => {
+  if (selected.size > 0) navigator.sendBeacon('/bookings/release-seats', JSON.stringify({seat_ids:[...selected]}));
+});
+</script>
+{% endblock %}

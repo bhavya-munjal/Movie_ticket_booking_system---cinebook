@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Booking Confirmed — CineBook{% endblock %}
+{% block content %}
+<div class="section" style="max-width:560px">
+  <div class="confirmation-box">
+    <div class="confirmation-header">
+      <div class="checkmark">✅</div>
+      <h2>Booking Confirmed!</h2>
+      <p style="color:#86efac;margin-top:0.25rem">Ref: {{ booking.booking_ref }}</p>
+    </div>
+    <div class="confirmation-body">
+      <div class="info-row"><span class="info-label">Movie</span><span>{{ booking.showtime.movie.title }}</span></div>
+      <div class="info-row"><span class="info-label">Date</span><span>{{ booking.showtime.show_date }}</span></div>
+      <div class="info-row"><span class="info-label">Time</span><span>{{ booking.showtime.show_time }}</span></div>
+      <div class="info-row"><span class="info-label">Screen</span><span>{{ booking.showtime.screen.name }}</span></div>
+      <div class="info-row"><span class="info-label">Seats</span><span>{{ booking.seat_labels }}</span></div>
+      <div class="info-row"><span class="info-label">Amount Paid</span><span style="color:var(--success);font-weight:700">₹{{ "%.0f"|format(booking.total_amount) }}</span></div>
+      <div class="info-row"><span class="info-label">Transaction ID</span><span style="font-size:0.8rem;color:var(--text2)">{{ booking.transaction_id }}</span></div>
+      <div class="info-row"><span class="info-label">Status</span><span><span class="badge badge-confirmed">Confirmed</span></span></div>
+
+      <p class="text-muted text-sm mt-2" style="font-style:italic">📧 A confirmation email has been sent (check server logs in demo mode).</p>
+
+      <div class="flex gap-2 mt-3">
+        <a href="/bookings/my-bookings" class="btn btn-outline" style="flex:1">My Bookings</a>
+        <a href="/" class="btn btn-primary" style="flex:1">Book More</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

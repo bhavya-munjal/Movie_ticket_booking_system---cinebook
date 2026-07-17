@@ -1,0 +1,64 @@
+{% extends "admin/base_admin.html" %}
+{% block admin_content %}
+<div class="page-header"><h1>Showtimes</h1></div>
+
+<div class="card" style="padding:1.5rem;max-width:650px;margin-bottom:2rem">
+  <h3 style="margin-bottom:1rem">Add New Showtime</h3>
+  <form method="post" action="/admin/showtimes/add">
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Movie *</label>
+        <select name="movie_id" required>
+          <option value="">Select movie</option>
+          {% for m in movies %}<option value="{{ m.id }}">{{ m.title }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Screen *</label>
+        <select name="screen_id" required>
+          <option value="">Select screen</option>
+          {% for s in screens %}<option value="{{ s.id }}">{{ s.name }} ({{ s.total_rows * s.seats_per_row }} seats)</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Date *</label>
+        <input type="date" name="show_date" required>
+      </div>
+      <div class="form-group">
+        <label>Time *</label>
+        <select name="show_time" required>
+          {% for t in ['10:00 AM','12:30 PM','3:00 PM','5:30 PM','8:00 PM','10:30 PM'] %}
+          <option value="{{ t }}">{{ t }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-group" style="max-width:200px">
+      <label>Ticket Price (₹)</label>
+      <input type="number" name="price" value="250" min="1">
+    </div>
+    <button type="submit" class="btn btn-primary">Add Showtime</button>
+  </form>
+</div>
+
+<div class="section-title">All Showtimes</div>
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>Movie</th><th>Screen</th><th>Date</th><th>Time</th><th>Price</th></tr></thead>
+    <tbody>
+      {% for st in showtimes %}
+      <tr>
+        <td>{{ st.movie.title }}</td>
+        <td>{{ st.screen.name }}</td>
+        <td>{{ st.show_date }}</td>
+        <td>{{ st.show_time }}</td>
+        <td>₹{{ "%.0f"|format(st.price) }}</td>
+      </tr>
+      {% else %}
+      <tr><td colspan="5" style="text-align:center;color:var(--text2)">No showtimes yet.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

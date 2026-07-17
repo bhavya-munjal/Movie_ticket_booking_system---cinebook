@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Checkout — CineBook{% endblock %}
+{% block content %}
+<div class="section" style="max-width:620px">
+  <div class="page-header">
+    <h1>Checkout</h1>
+    <p class="text-muted">Review your booking and complete payment</p>
+  </div>
+
+  <div id="lock-timer" style="display:block">
+    ⏱ Seats held for <span id="timer-countdown">5:00</span> — complete payment before time runs out!
+  </div>
+
+  <div class="card mt-2" style="padding:1.5rem">
+    <h3 style="margin-bottom:1rem">Booking Summary</h3>
+    <div class="info-row"><span class="info-label">Movie</span><span>{{ showtime.movie.title }}</span></div>
+    <div class="info-row"><span class="info-label">Date</span><span>{{ showtime.show_date }}</span></div>
+    <div class="info-row"><span class="info-label">Time</span><span>{{ showtime.show_time }}</span></div>
+    <div class="info-row"><span class="info-label">Screen</span><span>{{ showtime.screen.name }}</span></div>
+    <div class="info-row"><span class="info-label">Seats</span><span>{{ seat_labels }}</span></div>
+    <div class="info-row"><span class="info-label">Tickets</span><span>{{ seat_count }} × ₹{{ "%.0f"|format(showtime.price) }}</span></div>
+    <div class="info-row" style="font-weight:700;font-size:1.05rem"><span class="info-label">Total</span><span>₹{{ "%.0f"|format(total) }}</span></div>
+  </div>
+
+  <div class="card mt-2" style="padding:1.5rem">
+    <h3 style="margin-bottom:1rem">Payment Method</h3>
+    <div class="payment-methods">
+      <div class="pay-option selected" onclick="selectPay(this,'card')">
+        <span class="icon">💳</span>Credit/Debit Card
+      </div>
+      <div class="pay-option" onclick="selectPay(this,'upi')">
+        <span class="icon">📱</span>UPI
+      </div>
+      <div class="pay-option" onclick="selectPay(this,'netbanking')">
+        <span class="icon">🏦</span>Net Banking
+      </div>
+    </div>
+    <p class="text-muted text-sm mt-1" style="font-style:italic">⚠️ This is a demo — no real payment is processed.</p>
+  </div>
+
+  <div class="mt-2">
+    <button class="btn btn-gold btn-block" style="padding:0.9rem;font-size:1rem" id="pay-btn" onclick="confirmPayment()">
+      💳 Pay ₹{{ "%.0f"|format(total) }}
+    </button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="pay-modal">
+  <div class="modal" style="text-align:center">
+    <div class="spinner"></div>
+    <p>Processing payment...</p>
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+const SHOWTIME_ID = {{ showtime.id }};
+const SEAT_IDS = [{{ seat_ids }}];
+let lockEnd = new Date(Date.now() + 5 * 60 * 1000);
+
+const cd = document.getElementById('timer-countdown');
+const timerInterval = setInterval(() => {
+  const left = Math.max(0, Math.round((lockEnd - Date.now()) / 1000));
+  const m = Math.floor(left / 60), s = left % 60;
+  cd.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  if (left === 0) { clearInterval(timerInterval); showToast('Session expired! Please re-select seats.', 'error'); setTimeout(() => history.back(), 2000); }
+}, 1000);
+
+function selectPay(el) {
+  document.querySelectorAll('.pay-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+async function confirmPayment() {
+  const btn = document.getElementById('pay-btn');
+  btn.disabled = true;
+  document.getElementById('pay-modal').classList.add('open');
+  await new Promise(r => setTimeout(r, 1800)); // simulate processing
+  const res = await apiPost('/bookings/confirm', { showtime_id: SHOWTIME_ID, seat_ids: SEAT_IDS });
+  document.getElementById('pay-modal').classList.remove('open');
+  if (res.success) {
+    window.location.href = `/bookings/confirmation/${res.booking_id}`;
+  } else {
+    showToast(res.message || 'Booking failed. Please try again.', 'error');
+    btn.disabled = false;
+  }
+}
+</script>
+{% endblock %}

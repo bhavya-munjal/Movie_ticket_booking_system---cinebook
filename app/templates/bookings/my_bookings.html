@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}My Bookings — CineBook{% endblock %}
+{% block content %}
+<div class="section" style="max-width:800px">
+  <div class="page-header">
+    <h1>My Bookings</h1>
+    <p class="text-muted">All your movie tickets in one place.</p>
+  </div>
+
+  {% if bookings %}
+  <div style="display:flex;flex-direction:column;gap:1rem">
+    {% for b in bookings %}
+    <div class="card" style="padding:1.25rem">
+      <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:1rem">
+        <div>
+          <div style="font-size:1.1rem;font-weight:700">{{ b.showtime.movie.title }}</div>
+          <div class="text-muted text-sm mt-1">{{ b.showtime.show_date }} · {{ b.showtime.show_time }} · {{ b.showtime.screen.name }}</div>
+          <div class="text-sm mt-1">Seats: <strong>{{ b.seat_labels }}</strong></div>
+          <div class="text-sm mt-1">Ref: <code style="color:var(--gold)">{{ b.booking_ref }}</code></div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:1.2rem;font-weight:700">₹{{ "%.0f"|format(b.total_amount) }}</div>
+          <div class="mt-1">
+            <span class="badge badge-{{ b.status }}">{{ b.status|title }}</span>
+            <span class="badge badge-{{ b.payment_status }}">{{ b.payment_status|title }}</span>
+          </div>
+          {% if b.status == 'confirmed' %}
+          <button class="btn btn-danger btn-sm mt-1" onclick="cancelBooking({{ b.id }})">Cancel</button>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">🎟</div>
+    <p>You have no bookings yet.</p>
+    <a href="/" class="btn btn-primary mt-2">Browse Movies</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function cancelBooking(id) {
+  confirmDialog('Cancel this booking? Refund will be processed in 5-7 business days.', async () => {
+    const res = await apiPost(`/bookings/cancel/${id}`, {});
+    if (res.success) { showToast('Booking cancelled successfully'); setTimeout(() => location.reload(), 1200); }
+    else showToast(res.message || 'Could not cancel booking', 'error');
+  });
+}
+</script>
+{% endblock %}

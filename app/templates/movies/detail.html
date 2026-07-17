@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+{% block title %}{{ movie.title }} — CineBook{% endblock %}
+{% block content %}
+<div class="movie-detail-grid">
+  <div class="movie-poster">
+    {% if movie.poster_url %}
+      <img src="{{ movie.poster_url }}" alt="{{ movie.title }}">
+    {% else %}
+      <div style="aspect-ratio:2/3;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:4rem;border-radius:10px;">🎬</div>
+    {% endif %}
+  </div>
+  <div class="movie-info">
+    <h1>{{ movie.title }}</h1>
+    <div class="movie-meta-row">
+      <span class="rating">★ {{ movie.rating }}</span>
+      <span class="badge badge-genre">{{ movie.genre }}</span>
+      <span class="badge badge-lang">{{ movie.language }}</span>
+      <span class="text-muted text-sm">{{ movie.duration_mins }} min</span>
+    </div>
+    <p class="movie-desc">{{ movie.description }}</p>
+
+    {% if grouped_showtimes %}
+    <div class="divider"></div>
+    <h3 style="margin-bottom:1rem;">Book Tickets</h3>
+
+    <div class="showtime-dates" id="date-tabs">
+      {% for date in grouped_showtimes.keys() %}
+      <button class="date-btn {% if loop.first %}active{% endif %}"
+              onclick="selectDate('{{ date }}')" data-date="{{ date }}">
+        {{ date }}
+      </button>
+      {% endfor %}
+    </div>
+
+    {% for date, slots in grouped_showtimes.items() %}
+    <div class="showtime-slots date-panel" data-date="{{ date }}" {% if not loop.first %}style="display:none"{% endif %}>
+      {% for st in slots %}
+      <a href="/bookings/seats/{{ st.id }}" class="slot-btn" style="text-decoration:none">
+        <span>{{ st.show_time }}</span>
+        <span class="price">₹{{ "%.0f"|format(st.price) }} · {{ st.screen.name }}</span>
+      </a>
+      {% endfor %}
+    </div>
+    {% endfor %}
+
+    {% else %}
+    <p class="text-muted mt-2">No showtimes available for this movie.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+function selectDate(date) {
+  document.querySelectorAll('.date-btn').forEach(b => b.classList.toggle('active', b.dataset.date === date));
+  document.querySelectorAll('.date-panel').forEach(p => p.style.display = p.dataset.date === date ? 'flex' : 'none');
+}
+</script>
+{% endblock %}

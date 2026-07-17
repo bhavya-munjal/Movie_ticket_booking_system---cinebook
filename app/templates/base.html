@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CineBook{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/css/style.css">
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-brand">Cine<span>Book</span></a>
+  <div class="nav-links">
+    <a href="/">Movies</a>
+    {% if user %}
+      <a href="/bookings/my-bookings">My Bookings</a>
+      {% if user.is_admin %}<a href="/admin/">Admin</a>{% endif %}
+      <a href="/auth/logout" class="btn btn-outline btn-sm">Logout</a>
+    {% else %}
+      <a href="/auth/login">Login</a>
+      <a href="/auth/register" class="btn btn-primary btn-sm">Register</a>
+    {% endif %}
+  </div>
+</nav>
+
+{% block content %}{% endblock %}
+
+<div id="toast"></div>
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <h3>Confirm Action</h3>
+    <p id="confirm-msg"></p>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="confirm-no">Cancel</button>
+      <button class="btn btn-primary" id="confirm-yes">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script src="/static/js/app.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>
